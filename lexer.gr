@@ -14,22 +14,29 @@ export enum TokenType {
   //binary operators
   Plus,
   Minus,
-  Mult,
+  Star,
   Div,
   Dot,
+  Equal,
   //unary operators
-  Not,
+  Bang,
   //boolean operators
   And,
   Or,
   Xor,
   True,
   False,
+  BangEqual,
+  EqualEqual,
+  Greater,
+  Less,
+  GreaterEqual,
+  LessEqual,
   //Literals
   String(String),
   Number(Number),
   Ident(String),
-  Newline,
+  Semicolon,
   EOF,
 }
 
@@ -45,6 +52,10 @@ let mut line = 1
 let mut source = ""
 let mut tokens = []
 
+let isAtEnd = () => {
+  current >= String.length(source)
+}
+
 let addToken = t => {
   let text = String.slice(start, current, source)
   let tok = { token_type: t, text, line }
@@ -55,6 +66,19 @@ let advance = () => {
   let c = String.charAt(current, source)
   current += 1
   c
+}
+
+let peek = e => {
+  let mut res = true
+  if (isAtEnd()) {
+    res = false
+  } else if (String.charAt(current, source) != e) {
+    res = false
+  } else {
+    current += 1
+  }
+
+  res
 }
 
 let scanToken = () => {
@@ -68,16 +92,27 @@ let scanToken = () => {
     ']' => addToken(RSquare),
     '.' => addToken(Dot),
     ',' => addToken(Comma),
-    '\n' => {
-      line += 1
-      addToken(Newline)
+    '-' => addToken(Minus),
+    '+' => addToken(Plus),
+    '*' => addToken(Star),
+    ';' => addToken(Semicolon),
+    '=' => {
+      if (peek('=')) {
+        addToken(EqualEqual)
+      } else {
+        addToken(Equal)
+      }
     },
-    _ => print("unrecognized token " ++ toString(c)),
-  }
-}
+    '!' => addToken(if (peek('=')) BangEqual else Bang),
+    '<' => addToken(if (peek('=')) LessEqual else Less),
+    '>' => addToken(if (peek('=')) GreaterEqual else Greater),
+    '\n' => line += 1,
+    _ => {
+      //TODO: Error handling
 
-let isAtEnd = () => {
-  current >= String.length(source)
+      print("unrecognized token " ++ toString(c))
+    },
+  }
 }
 
 export let scanTokens = src => {

@@ -2,8 +2,10 @@ import Lexer from "./lexer"
 
 print("hello world")
 let t = Lexer.scanTokens("{}().,[]
-[,].()
-
+[,].();
+>= < ==;
+<>
++=*
 
 hello
 
