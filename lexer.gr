@@ -1,0 +1,94 @@
+import String from "string"
+import List from "list"
+import { toString } from "char"
+
+export enum TokenType {
+  //brackets and such
+  RParen,
+  LParen,
+  RBrace,
+  LBrace,
+  RSquare,
+  LSquare,
+  Comma,
+  //binary operators
+  Plus,
+  Minus,
+  Mult,
+  Div,
+  Dot,
+  //unary operators
+  Not,
+  //boolean operators
+  And,
+  Or,
+  Xor,
+  True,
+  False,
+  //Literals
+  String(String),
+  Number(Number),
+  Ident(String),
+  Newline,
+  EOF,
+}
+
+export record Token {
+  token_type: TokenType,
+  text: String,
+  line: Number,
+}
+
+let mut start = 0
+let mut current = 0
+let mut line = 1
+let mut source = ""
+let mut tokens = []
+
+let addToken = t => {
+  let text = String.slice(start, current, source)
+  let tok = { token_type: t, text, line }
+  tokens = List.append(tokens, [tok])
+}
+
+let advance = () => {
+  let c = String.charAt(current, source)
+  current += 1
+  c
+}
+
+let scanToken = () => {
+  let c = advance()
+  match (c) {
+    '(' => addToken(LParen),
+    ')' => addToken(RParen),
+    '{' => addToken(LBrace),
+    '}' => addToken(RBrace),
+    '[' => addToken(LSquare),
+    ']' => addToken(RSquare),
+    '.' => addToken(Dot),
+    ',' => addToken(Comma),
+    '\n' => {
+      line += 1
+      addToken(Newline)
+    },
+    _ => print("unrecognized token " ++ toString(c)),
+  }
+}
+
+let isAtEnd = () => {
+  current >= String.length(source)
+}
+
+export let scanTokens = src => {
+  source = src
+
+  while (!isAtEnd()) {
+    start = current
+    scanToken()
+  }
+
+  List.append(tokens, [{ token_type: EOF, text: "", line }])
+
+  tokens
+}
