@@ -1,15 +1,37 @@
 import Lexer from "./lexer"
+import { readFile } from "./file"
+import { hadError } from "./error"
 
-print("hello world")
-let t = Lexer.scanTokens("{}().,[]
+// print("hello world")
+// //can't get the file reading to work idk
+// match (readFile("test.lox")) {
+//   Ok(s) => {
+//     print("Hey wo this almost worked")
+//     print(Lexer.scanTokens(s))
+//   },
+//   Err(e) => {
+//     print(e)
+//   },
+// }
+
+export let run = source => {
+  let tokens = Lexer.scanTokens(source)
+  //don't actually run any code if there was an error
+  if (!hadError) {
+    print(tokens)
+  }
+}
+
+// export let runPrompt = () => {
+
+// }
+
+run("{}().,[]
 [,].();
 >= < ==;
 <>
 +=*
-
-hello
-
+//this is a comment lol
 {
-    
+
 }")
-print(t)

@@ -1,0 +1,32 @@
+import File from "sys/file"
+import Result from "result"
+import { toNumber } from "int64"
+
+//This is how fdRead is set up in the tesst for sys/file
+export let readFile = path => {
+  //can't get this to return anything other than
+  //SystemError(44) or SystemError(2)
+  let fd = File.pathOpen(
+    File.pwdfd,
+    [File.SymlinkFollow],
+    path,
+    [File.Create],
+    [File.FdRead],
+    [File.FdRead],
+    []
+  )
+  match (fd) {
+    Ok(f) => {
+      let stats = Result.unwrap(File.fdFilestats(f))
+      let (c, _) = Result.expect(
+        "Unable to read file",
+        File.fdRead(f, toNumber(stats.size))
+      )
+      File.fdClose(f)
+      Ok(c)
+    },
+    Err(e) => {
+      Err("Error opening file at " ++ path ++ ":\n" ++ toString(e))
+    },
+  }
+}

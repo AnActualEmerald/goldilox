@@ -1,6 +1,7 @@
 import String from "string"
 import List from "list"
 import { toString } from "char"
+import { report } from "./error"
 
 export enum TokenType {
   //brackets and such
@@ -15,9 +16,9 @@ export enum TokenType {
   Plus,
   Minus,
   Star,
-  Div,
   Dot,
   Equal,
+  Slash,
   //unary operators
   Bang,
   //boolean operators
@@ -68,7 +69,8 @@ let advance = () => {
   c
 }
 
-let peek = e => {
+//Check if the next character matches, and consume it if it does
+let nibble = e => {
   let mut res = true
   if (isAtEnd()) {
     res = false
@@ -79,6 +81,15 @@ let peek = e => {
   }
 
   res
+}
+
+//Get the next character without consuming it
+let peek = () => {
+  if (isAtEnd()) {
+    '\0'
+  } else {
+    String.charAt(current, source)
+  }
 }
 
 let scanToken = () => {
@@ -97,24 +108,38 @@ let scanToken = () => {
     '*' => addToken(Star),
     ';' => addToken(Semicolon),
     '=' => {
-      if (peek('=')) {
+      if (nibble('=')) {
         addToken(EqualEqual)
       } else {
         addToken(Equal)
       }
     },
-    '!' => addToken(if (peek('=')) BangEqual else Bang),
-    '<' => addToken(if (peek('=')) LessEqual else Less),
-    '>' => addToken(if (peek('=')) GreaterEqual else Greater),
+    '!' => addToken(if (nibble('=')) BangEqual else Bang),
+    '<' => addToken(if (nibble('=')) LessEqual else Less),
+    '>' => addToken(if (nibble('=')) GreaterEqual else Greater),
+    '/' => {
+      if (nibble('/')) {
+        //ignore the comment until the end of the line
+        while (peek() != '\n' && !isAtEnd()) {
+          advance()
+          void //don't want to return the character here
+        }
+      } else {
+        addToken(Slash)
+      }
+    },
     '\n' => line += 1,
+    //ignore whitespace
+    ' ' => void,
+    '\r' => void,
+    '\t' => void,
     _ => {
-      //TODO: Error handling
-
-      print("unrecognized token " ++ toString(c))
+      report(line, "Unrecognized token " ++ toString(c))
     },
   }
 }
 
+//Loop through each character in the source string
 export let scanTokens = src => {
   source = src
 
