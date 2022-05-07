@@ -1,18 +1,25 @@
 import Lexer from "./lexer"
 import { readFile } from "./file"
 import { hadError } from "./error"
+import { argv } from "sys/process"
+import { expect } from "result"
+import { reverse, get } from "array"
+
+let args = expect("Unable to get command line args", argv())
+//use the last argument from the command line for simplicity
+let args = reverse(args)
+let f = get(0, args)
 
 // print("hello world")
-// //can't get the file reading to work idk
-// match (readFile("test.lox")) {
-//   Ok(s) => {
-//     print("Hey wo this almost worked")
-//     print(Lexer.scanTokens(s))
-//   },
-//   Err(e) => {
-//     print(e)
-//   },
-// }
+//can't get the file reading to work idk
+match (readFile(f)) {
+  Ok(s) => {
+    print(Lexer.scanTokens(s))
+  },
+  Err(e) => {
+    print(e)
+  },
+}
 
 export let run = source => {
   let tokens = Lexer.scanTokens(source)
@@ -26,12 +33,12 @@ export let run = source => {
 
 // }
 
-run("{}().,[]
-[,].();
->= < ==;
-<>
-+=*
-//this is a comment lol
-{
+// run("{}().,[]
+// [,].();
+// >= < ==;
+// <>
+// +=*
+// //this is a comment lol
+// {
 
-}")
+// }")

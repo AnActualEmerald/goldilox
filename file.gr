@@ -11,13 +11,13 @@ export let readFile = path => {
     [File.SymlinkFollow],
     path,
     [File.Create],
-    [File.FdRead],
-    [File.FdRead],
-    []
+    [File.FdRead, File.FdFilestats],
+    [File.FdRead, File.FdFilestats],
+    [File.Append]
   )
   match (fd) {
     Ok(f) => {
-      let stats = Result.unwrap(File.fdFilestats(f))
+      let stats = Result.expect("Unable to get file stats", File.fdFilestats(f))
       let (c, _) = Result.expect(
         "Unable to read file",
         File.fdRead(f, toNumber(stats.size))
@@ -26,6 +26,7 @@ export let readFile = path => {
       Ok(c)
     },
     Err(e) => {
+      print(e)
       Err("Error opening file at " ++ path ++ ":\n" ++ toString(e))
     },
   }
