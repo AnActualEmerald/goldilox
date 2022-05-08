@@ -92,7 +92,7 @@ let peek = () => {
   }
 }
 
-let scanToken = () => {
+let rec scanToken = () => {
   let c = advance()
   match (c) {
     '(' => addToken(LParen),
@@ -126,6 +126,16 @@ let scanToken = () => {
         }
       } else {
         addToken(Slash)
+      }
+    },
+    '"' => {
+      while (!nibble('"') && !isAtEnd()) {
+        advance()
+        void
+      }
+      if (!isAtEnd()) {
+        let lit = String.slice(start + 1, current - 1, source)
+        addToken(String(lit))
       }
     },
     '\n' => line += 1,
