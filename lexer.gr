@@ -1,7 +1,10 @@
 import String from "string"
 import List from "list"
-import { toString } from "char"
+import Char, { code } from "char"
 import { report } from "./error"
+import { parseInt } from "number"
+import { expect } from "result"
+import Array from "array"
 
 export enum TokenType {
   //brackets and such
@@ -92,6 +95,72 @@ let peek = () => {
   }
 }
 
+let peekNext = () => {
+  if (isAtEnd()) {
+    '\0'
+  } else {
+    String.charAt(current + 1, source)
+  }
+}
+
+let isDigit = c => {
+  code(c) >= code('0') && code(c) <= code('9')
+}
+
+let makeString = () => {
+  while (peek() != '"' && !isAtEnd()) {
+    if (peek() == '\n') {
+      line += 1
+    }
+    advance()
+    void
+  }
+  if (isAtEnd()) {
+    report(line, "Unterminated string - unecpected EOF")
+  } else {
+    //consume the closing '"'
+    advance()
+    let lit = String.slice(start + 1, current - 1, source)
+    addToken(String(lit))
+  }
+}
+
+let makeNumber = () => {
+  while (isDigit(peek())) {
+    advance()
+    void
+  }
+  //grain's stdlib can only parse ints right now so we'll do the integer and fractional parts separately
+  let mut num = expect(
+    "Unable to parse number at " ++ toString(line),
+    parseInt(String.slice(start, current, source), 10)
+  )
+  if (peek() == '.' && isDigit(peekNext())) {
+    //consume the .
+    advance()
+    let fracStart = current
+    while (isDigit(peek())) {
+      advance()
+
+      void
+    }
+    let slice = String.slice(fracStart, current, source)
+    let dec = expect(
+      "Unable to parse number at " ++ toString(line),
+      parseInt(slice, 10)
+    )
+
+    //weird hack-y workaround for no exponent function idk if this is bad or not
+    let e = Array.reduce((b, a) => b * a,
+    1,
+    Array.init(current - fracStart, c => 10)
+    )
+    num += dec / e
+  }
+  print(num)
+  addToken(Number(num))
+}
+
 let rec scanToken = () => {
   let c = advance()
   match (c) {
@@ -129,28 +198,29 @@ let rec scanToken = () => {
       }
     },
     '"' => {
-      while (!nibble('"') && !isAtEnd()) {
-        advance()
-        void
-      }
-      if (!isAtEnd()) {
-        let lit = String.slice(start + 1, current - 1, source)
-        addToken(String(lit))
-      }
+      makeString()
     },
     '\n' => line += 1,
     //ignore whitespace
     ' ' => void,
     '\r' => void,
     '\t' => void,
-    _ => {
-      report(line, "Unrecognized token " ++ toString(c))
+    c => {
+      if (isDigit(c)) {
+        makeNumber()
+      } else {
+        report(line, "Unrecognized token " ++ toString(c))
+      }
     },
   }
 }
 
 //Loop through each character in the source string
 export let scanTokens = src => {
+  start = 0
+  current = 0
+  line = 1
+  tokens = []
   source = src
 
   while (!isAtEnd()) {
