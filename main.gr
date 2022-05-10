@@ -3,25 +3,15 @@ import { readFile } from "./file"
 import { hadError } from "./error"
 import { argv } from "sys/process"
 import { expect } from "result"
-import { reverse, get } from "array"
+import { reverse, get, length } from "array"
+import Console from "./console"
 
 let args = expect("Unable to get command line args", argv())
-//use the last argument from the command line for simplicity
-let args = reverse(args)
-let f = get(0, args)
 
 // print("hello world")
 //can't get the file reading to work idk
-match (readFile(f)) {
-  Ok(s) => {
-    print(Lexer.scanTokens(s))
-  },
-  Err(e) => {
-    print(e)
-  },
-}
 
-export let run = source => {
+let run = source => {
   let tokens = Lexer.scanTokens(source)
   //don't actually run any code if there was an error
   if (!hadError) {
@@ -29,16 +19,34 @@ export let run = source => {
   }
 }
 
-// export let runPrompt = () => {
+let runPrompt = () => {
+  print("goldilox REPL 9000")
+  while (true) {
+    Console.prit(">>> ")
+    let input = Console.readLine()
+    if (input == "exit" || input == "quit") {
+      break
+    }
+    print(Lexer.scanTokens(input))
+  }
+}
 
-// }
+print(1000/3)
 
-// run("{}().,[]
-// [,].();
-// >= < ==;
-// <>
-// +=*
-// //this is a comment lol
-// {
-
-// }")
+//this line kind of assumes that the programm is being run by something other that the grain js runner
+//because the js runner has some extra args that are thrown in
+if (length(args) >= 2) {
+  //use the last argument from the command line for simplicity
+  let args = reverse(args)
+  let f = get(0, args)
+  match (readFile(f)) {
+    Ok(s) => {
+      run(s)
+    },
+    Err(e) => {
+      print(e)
+    },
+  }
+} else {
+  runPrompt()
+}

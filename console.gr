@@ -1,1 +1,28 @@
 //TODO: attempt to read user input from stdin
+import Fs from "sys/file"
+import { expect } from "result"
+import { fromNumber } from "int64"
+import { append, join } from "list"
+
+export let readLine = () => {
+  let mut ret = []
+  while (true) {
+    match (Fs.fdRead(Fs.stdin, 1)) {
+      Ok((s, _)) => {
+        if (s != "\n") {
+          ret = append(ret, [s])
+          void
+        } else {
+          break
+        }
+      },
+      Err(e) => print(e),
+    }
+  }
+  join("", ret)
+}
+
+//Print function with no \n
+export let prit = msg => {
+  Fs.fdWrite(Fs.stdout, msg)
+}
