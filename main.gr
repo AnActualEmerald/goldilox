@@ -1,10 +1,13 @@
-import Lexer from "./lexer"
 import { readFile } from "./file"
 import { hadError } from "./error"
 import { argv } from "sys/process"
 import { expect } from "result"
-import { reverse, get, length } from "array"
+import { reverse, get, some, length } from "array"
+import { endsWith } from "string"
 import Console from "./console"
+
+//putting this first causes a cyclical dependency for some reason
+import Lexer from "./lexer"
 
 let args = expect("Unable to get command line args", argv())
 
@@ -27,18 +30,13 @@ let runPrompt = () => {
     if (input == "exit" || input == "quit") {
       break
     }
-    print(Lexer.scanTokens(input))
+    run(input)
   }
 }
 
-print(1000/3)
-
-//this line kind of assumes that the programm is being run by something other that the grain js runner
-//because the js runner has some extra args that are thrown in
-if (length(args) >= 2) {
+if (some(a => endsWith(".lox", a), args)) {
   //use the last argument from the command line for simplicity
-  let args = reverse(args)
-  let f = get(0, args)
+  let f = get(length(args) - 1, args)
   match (readFile(f)) {
     Ok(s) => {
       run(s)

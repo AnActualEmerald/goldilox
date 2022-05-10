@@ -5,6 +5,7 @@ import { report } from "./error"
 import { parseInt } from "number"
 import { expect } from "result"
 import Array from "array"
+import { make, set, get } from "map"
 
 export enum TokenType {
   //brackets and such
@@ -25,11 +26,6 @@ export enum TokenType {
   //unary operators
   Bang,
   //boolean operators
-  And,
-  Or,
-  Xor,
-  True,
-  False,
   BangEqual,
   EqualEqual,
   Greater,
@@ -39,7 +35,23 @@ export enum TokenType {
   //Literals
   String(String),
   Number(Number),
-  Ident(String),
+  Ident,
+  //keywords
+  Class,
+  And,
+  Or,
+  True,
+  False,
+  If,
+  Else,
+  Print,
+  Return,
+  Super,
+  This,
+  Var,
+  While,
+  For,
+  Fun,
   Semicolon,
   EOF,
 }
@@ -49,6 +61,23 @@ export record Token {
   text: String,
   line: Number,
 }
+
+let keywords = make()
+set("class", Class, keywords)
+set("and", And, keywords)
+set("or", Or, keywords)
+set("true", True, keywords)
+set("false", False, keywords)
+set("if", If, keywords)
+set("else", Else, keywords)
+set("print", Print, keywords)
+set("return", Return, keywords)
+set("super", Super, keywords)
+set("this", This, keywords)
+set("var", Var, keywords)
+set("while", While, keywords)
+set("for", For, keywords)
+set("fun", Fun, keywords)
 
 let mut start = 0
 let mut current = 0
@@ -107,6 +136,16 @@ let isDigit = c => {
   code(c) >= code('0') && code(c) <= code('9')
 }
 
+let isAlpha = c => {
+  code(c) >= code('a') && code(c) <= code('z') ||
+  code(c) >= code('A') && code(c) <= code('Z') ||
+  c == '_'
+}
+
+let isAlphaNumberic = c => {
+  isAlpha(c) || isDigit(c)
+}
+
 let makeString = () => {
   while (peek() != '"' && !isAtEnd()) {
     if (peek() == '\n') {
@@ -157,8 +196,22 @@ let makeNumber = () => {
     )
     num += dec / e
   }
-  print(num)
   addToken(Number(num))
+}
+
+let makeIdent = () => {
+  while (isAlphaNumberic(peek())) {
+    advance()
+    void
+  }
+
+  let text = String.slice(start, current, source)
+  let ty = match (get(text, keywords)) {
+    Some(t) => t,
+    None => Ident,
+  }
+
+  addToken(ty)
 }
 
 let rec scanToken = () => {
@@ -208,6 +261,8 @@ let rec scanToken = () => {
     c => {
       if (isDigit(c)) {
         makeNumber()
+      } else if (isAlpha(c)) {
+        makeIdent()
       } else {
         report(line, "Unrecognized token " ++ toString(c))
       }
