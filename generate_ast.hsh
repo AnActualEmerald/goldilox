@@ -1,0 +1,40 @@
+#simple script to generate expr.gr
+let args = std.args()
+
+if std.len(args) != 1 then
+    std.print("Usage: generate_ast <output_dir>")
+    std.exit(1)
+end
+
+let outputDir = args[0]
+
+function writeLine(path, data)
+    {echo $data "\n" >> $path}
+end
+
+function defineType(path, name, fields)
+    let variant = "    " ++ name ++ "("
+    for f in std.iter(std.split(fields, " ")) do
+        variant = variant ++ f ++ ","
+    end
+    variant = variant ++ "),"
+    writeLine(path, variant)
+end
+
+function defineAst(output, baseName, types)
+    let path = output ++ "/" ++ baseName ++ ".gr"
+
+    {echo "" > $path}
+    writeLine(path, "import { Token } from \"./lox/lexer\"")
+    writeLine(path, "export enum " ++ baseName ++ "{")
+
+    for t in std.iter(types) do 
+        let varName = std.trim(std.split(t, ":")[0])
+        let fields = std.trim(std.split(t, ":")[1])
+        defineType(path, varName, fields)
+    end
+    writeLine(path, "}")
+
+end
+
+defineAst(outputDir, "Expr", ["Binary : Expr Token Expr"])
