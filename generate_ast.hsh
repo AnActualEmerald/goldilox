@@ -37,4 +37,4 @@ function defineAst(output, baseName, types)
 
 end
 
-defineAst(outputDir, "Expr", ["Binary : Expr Token Expr"])
+defineAst(outputDir, "Expr", ["Binary : Expr Token Expr", "Grouping : Expr", "Literal: Token", "Unary: Token Expr"])

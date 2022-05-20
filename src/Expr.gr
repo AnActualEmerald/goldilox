@@ -2,4 +2,7 @@ import { Token } from "./lox/lexer"
 
 export enum Expr {
   Binary(Expr, Token, Expr),
+  Grouping(Expr),
+  Literal(Token),
+  Unary(Token, Expr),
 }
