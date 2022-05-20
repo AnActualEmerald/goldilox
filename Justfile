@@ -1,11 +1,11 @@
 build:
-    grain compile main.gr -o goldilox.wasm
+    grain compile src/main.gr -o goldilox.wasm
 
 run *args='':
-    grain main.gr {{args}}
+    grain src/main.gr {{args}}
 
 test:
-    grain main.gr test.lox
+    grain src/main.gr test.lox
 
 wasm *args='': build
     wasmtime --dir=. goldilox.wasm {{args}}

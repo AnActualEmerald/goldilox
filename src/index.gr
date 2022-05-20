@@ -1,0 +1,10 @@
+//Inteded for use on the web. Doesn't link any modules that use wasi.
+import Lexer from "./lexer"
+import { hadError } from "./error"
+
+export let run = source => {
+  let tokens = Lexer.scanTokens(source)
+  if (!hadError) {
+    print(tokens)
+  }
+}

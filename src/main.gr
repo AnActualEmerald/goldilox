@@ -1,13 +1,13 @@
-import { readFile } from "./file"
-import { hadError } from "./error"
+import { readFile } from "./util/file"
+import { hadError } from "./util/error"
 import { argv } from "sys/process"
 import { expect } from "result"
 import { reverse, get, some, length } from "array"
 import { endsWith } from "string"
-import Console from "./console"
+import Console from "./util/console"
 
 //putting this first causes a cyclical dependency for some reason
-import Lexer from "./lexer"
+import Lexer from "./lox/lexer"
 
 let args = expect("Unable to get command line args", argv())
 

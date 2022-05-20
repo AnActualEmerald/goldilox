@@ -1,7 +1,7 @@
 import String from "string"
 import List from "list"
 import Char, { code } from "char"
-import { report } from "./error"
+import { report } from "../util/error"
 import { parseInt } from "number"
 import { expect } from "result"
 import Array from "array"
