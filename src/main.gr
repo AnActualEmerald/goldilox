@@ -1,12 +1,14 @@
 import { readFile } from "./util/file"
 import { hadError } from "./util/error"
 import { argv } from "sys/process"
-import { expect } from "result"
+import { expect, unwrap } from "result"
 import { reverse, get, some, length, fromList, forEach } from "array"
 import { endsWith } from "string"
 import Console from "./util/console"
 import { parse } from "./lox/parser"
-
+import { monotonicTime as time } from "sys/time"
+import { sub, div, toNumber } from "int64"
+import { fromNumber } from "float64"
 //putting this first causes a cyclical dependency for some reason
 import Lexer, * from "./lox/lexer"
 
@@ -15,12 +17,23 @@ let args = expect("Unable to get command line args", argv())
 import Expr, { prettyFormat } from "./lox/expr"
 
 let run = source => {
+  let lexStart = unwrap(time())
   let tokens = Lexer.scanTokens(source)
+  let lexEnd = unwrap(time())
   //don't actually run any code if there was an error
   if (!hadError) {
+    let toks = fromList(tokens)
+    let parseStart = unwrap(time())
+    let trees = parse(toks)
+    let parseEnd = unwrap(time())
     forEach(e => {
       print(prettyFormat(e))
-    }, parse(fromList(tokens)))
+    }, trees)
+    //I really dislike the way Numbers are printed sorry
+    let lt = fromNumber(toNumber(sub(lexEnd, lexStart)) / 1000000)
+    let pt = fromNumber(toNumber(sub(parseEnd, parseStart)) / 1000000)
+    print("Lexing took: " ++ toString(lt) ++ "ms")
+    print("Parsing took: " ++ toString(pt) ++ "ms")
   }
 }
 
