@@ -1,5 +1,5 @@
 # Goldilox
 
-A Grain implementation of Lox from Robert Nystrom's *Crafting Interpreters*
+A Grain implementation of Lox from Robert Nystrom's _Crafting Interpreters_
 
-Currently only done up to chapter 4.
+Currently done through chapter 5
