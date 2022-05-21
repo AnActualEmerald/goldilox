@@ -52,6 +52,7 @@ export enum TokenType {
   While,
   For,
   Fun,
+  Nil,
   Semicolon,
   EOF,
 }
@@ -78,6 +79,7 @@ set("var", Var, keywords)
 set("while", While, keywords)
 set("for", For, keywords)
 set("fun", Fun, keywords)
+set("nil", Nil, keywords)
 
 let mut start = 0
 let mut current = 0

@@ -3,7 +3,10 @@ import { Token } from "./lexer"
 export enum Expr {
   Binary(Expr, Token, Expr), //Left Operator Right
   Grouping(Expr), //Group
-  Literal(Token), //Literal
+  StringLiteral(String), //Literal
+  NumLiteral(Number), //Literal
+  BoolLiteral(Bool), //Literal
+  NilLiteral,
   Unary(Token, Expr), //Operator Expression
 }
 
@@ -26,6 +29,9 @@ export let rec prettyFormat = e => {
     Binary(l, o, r) => parenthesize(o.text, [> l, r]),
     Unary(o, r) => parenthesize(o.text, [> r]),
     Grouping(g) => parenthesize("group", [> g]),
-    Literal(l) => l.text,
+    NumLiteral(n) => toString(n),
+    StringLiteral(s) => s,
+    BoolLiteral(b) => toString(b),
+    NilLiteral => "nil",
   }
 }

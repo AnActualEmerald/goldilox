@@ -1,0 +1,137 @@
+import { TokenType } from "./lexer"
+import { Expr } from "./expr"
+import { forEach } from "list"
+
+let mut tokens = [>]
+let mut current = 0
+
+let previous = () => {
+  tokens[current - 1]
+}
+
+let peek = () => {
+  tokens[current]
+}
+
+let isAtEnd = () => {
+  peek().token_type == EOF
+}
+
+let advance = () => {
+  if (!isAtEnd()) {
+    current += 1
+  }
+  previous()
+}
+
+let check = t => {
+  if (isAtEnd()) {
+    false
+  } else {
+    peek().token_type == t
+  }
+}
+
+let within = types => {
+  let mut ret = false
+  forEach(el => {
+    if (check(el) && !ret) {
+      ret = true
+      advance()
+    }
+  }, types)
+
+  ret
+}
+
+//this seems inefficient but I don't know how else to make `expression` callable from the top of the grammar
+let rec expression = () => {
+  let primary = () => {
+    let mut ret = NilLiteral
+    if (within([False])) {
+      ret = BoolLiteral(false)
+    } else if (within([True])) {
+      ret = BoolLiteral(true)
+    } else if (within([Nil])) {
+      ret = NilLiteral
+    } else {
+      let t = tokens[current]
+      match (t.token_type) {
+        String(s) => {
+          advance()
+          ret = StringLiteral(s)
+        },
+        Number(n) => {
+          advance()
+          ret = NumLiteral(n)
+        },
+        _ => {
+          if (within([LParen])) {
+            let e = expression()
+            // consume(RParen, "Expect ')' after exression.")
+            ret = Grouping(e)
+          }
+        },
+      }
+    }
+    ret
+  }
+
+  let rec unary = () => {
+    if (within([Bang, Minus])) {
+      let op = previous()
+      let right = unary()
+      Unary(op, right)
+    } else {
+      primary()
+    }
+  }
+
+  let factor = () => {
+    let mut e = unary()
+
+    while (within([Slash, Star])) {
+      let op = previous()
+      let right = unary()
+      e = Binary(e, op, right)
+    }
+
+    e
+  }
+
+  let term = () => {
+    let mut e = factor()
+
+    while (within([Minus, Plus])) {
+      let op = previous()
+      let right = factor()
+      e = Binary(e, op, right)
+    }
+
+    e
+  }
+
+  let comparison = () => {
+    let mut e = term()
+
+    while (within([Greater, GreaterEqual, Less, LessEqual])) {
+      let op = previous()
+      let right = term()
+      e = Binary(e, op, right)
+    }
+
+    e
+  }
+
+  let equality = () => {
+    let mut e = comparison()
+
+    while (within([BangEqual, EqualEqual])) {
+      let op = previous()
+      let right = comparison()
+      e = Binary(e, op, right)
+    }
+  }
+
+  equality()
+}

@@ -24,6 +24,9 @@ function Type(raw)
     let comments = []
     for f in std.iter(std.split(parts[1], ",")) do 
         f = std.trim(f)
+        if f == "" then
+            break
+        end
         let comment = std.split(f, " ")[0]
         let field = std.split(f, " ")[1]
         std.push(fields, field)
@@ -76,4 +79,4 @@ function defineAst(output, baseName, types)
 
 end
 
-defineAst(outputDir, "Expr", ["Binary : Left Expr, Operator Token, Right Expr", "Grouping : Group Expr", "Literal: Literal Token", "Unary: Operator Token, Expression Expr"])
+defineAst(outputDir, "Expr", ["Binary : Left Expr, Operator Token, Right Expr", "Grouping : Group Expr", "StringLiteral: Literal String", "NumLiteral: Literal Number", "BoolLiteral: Literal Bool", "NilLiteral: ", "Unary: Operator Token, Expression Expr"])

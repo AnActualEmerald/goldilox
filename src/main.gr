@@ -24,6 +24,8 @@ let dummy = Expr.Binary(
   )
 )
 
+true
+
 print(prettyFormat(dummy))
 
 // let run = source => {
