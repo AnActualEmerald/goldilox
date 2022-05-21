@@ -285,7 +285,7 @@ export let scanTokens = src => {
     scanToken()
   }
 
-  List.append(tokens, [{ token_type: EOF, text: "", line }])
+  tokens = List.append(tokens, [{ token_type: EOF, text: "", line }])
 
   tokens
 }

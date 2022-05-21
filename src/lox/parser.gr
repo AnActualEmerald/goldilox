@@ -1,8 +1,9 @@
-import { TokenType } from "./lexer"
-import { Expr } from "./expr"
 import { forEach } from "list"
+import Array from "array"
+import Lexer from "./lexer"
+import Expr from "./expr"
 
-let mut tokens = [>]
+let mut tokens: Array<Lexer.Token> = [>]
 let mut current = 0
 
 let previous = () => {
@@ -14,7 +15,7 @@ let peek = () => {
 }
 
 let isAtEnd = () => {
-  peek().token_type == EOF
+  peek().token_type == Lexer.EOF
 }
 
 let advance = () => {
@@ -38,6 +39,7 @@ let within = types => {
     if (check(el) && !ret) {
       ret = true
       advance()
+      void
     }
   }, types)
 
@@ -47,29 +49,27 @@ let within = types => {
 //this seems inefficient but I don't know how else to make `expression` callable from the top of the grammar
 let rec expression = () => {
   let primary = () => {
-    let mut ret = NilLiteral
-    if (within([False])) {
-      ret = BoolLiteral(false)
-    } else if (within([True])) {
-      ret = BoolLiteral(true)
-    } else if (within([Nil])) {
-      ret = NilLiteral
+    let mut ret = Expr.NilLiteral
+    if (within([Lexer.False])) {
+      ret = Expr.BoolLiteral(false)
+    } else if (within([Lexer.True])) {
+      ret = Expr.BoolLiteral(true)
+    } else if (within([Lexer.Nil])) {
+      ret = Expr.NilLiteral
     } else {
-      let t = tokens[current]
+      let t = advance()
       match (t.token_type) {
-        String(s) => {
-          advance()
-          ret = StringLiteral(s)
+        Lexer.String(s) => {
+          ret = Expr.StringLiteral(s)
         },
-        Number(n) => {
-          advance()
-          ret = NumLiteral(n)
+        Lexer.Number(n) => {
+          ret = Expr.NumLiteral(n)
         },
         _ => {
-          if (within([LParen])) {
+          if (within([Lexer.LParen])) {
             let e = expression()
             // consume(RParen, "Expect ')' after exression.")
-            ret = Grouping(e)
+            ret = Expr.Grouping(e)
           }
         },
       }
@@ -78,10 +78,10 @@ let rec expression = () => {
   }
 
   let rec unary = () => {
-    if (within([Bang, Minus])) {
+    if (within([Lexer.Bang, Lexer.Minus])) {
       let op = previous()
       let right = unary()
-      Unary(op, right)
+      Expr.Unary(op, right)
     } else {
       primary()
     }
@@ -90,10 +90,10 @@ let rec expression = () => {
   let factor = () => {
     let mut e = unary()
 
-    while (within([Slash, Star])) {
+    while (within([Lexer.Slash, Lexer.Star])) {
       let op = previous()
       let right = unary()
-      e = Binary(e, op, right)
+      e = Expr.Binary(e, op, right)
     }
 
     e
@@ -102,10 +102,10 @@ let rec expression = () => {
   let term = () => {
     let mut e = factor()
 
-    while (within([Minus, Plus])) {
+    while (within([Lexer.Minus, Lexer.Plus])) {
       let op = previous()
       let right = factor()
-      e = Binary(e, op, right)
+      e = Expr.Binary(e, op, right)
     }
 
     e
@@ -114,10 +114,12 @@ let rec expression = () => {
   let comparison = () => {
     let mut e = term()
 
-    while (within([Greater, GreaterEqual, Less, LessEqual])) {
+    while (
+      within([Lexer.Greater, Lexer.GreaterEqual, Lexer.Less, Lexer.LessEqual])
+    ) {
       let op = previous()
       let right = term()
-      e = Binary(e, op, right)
+      e = Expr.Binary(e, op, right)
     }
 
     e
@@ -126,12 +128,25 @@ let rec expression = () => {
   let equality = () => {
     let mut e = comparison()
 
-    while (within([BangEqual, EqualEqual])) {
+    while (within([Lexer.BangEqual, Lexer.EqualEqual])) {
       let op = previous()
       let right = comparison()
-      e = Binary(e, op, right)
+      e = Expr.Binary(e, op, right)
     }
+
+    e
   }
 
   equality()
+}
+
+export let parse = ts => {
+  tokens = ts
+  current = 0
+  let mut trees = [>]
+  while (!isAtEnd()) {
+    trees = Array.append(trees, [> expression()])
+  }
+
+  trees
 }

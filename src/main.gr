@@ -2,63 +2,51 @@ import { readFile } from "./util/file"
 import { hadError } from "./util/error"
 import { argv } from "sys/process"
 import { expect } from "result"
-import { reverse, get, some, length } from "array"
+import { reverse, get, some, length, fromList, forEach } from "array"
 import { endsWith } from "string"
 import Console from "./util/console"
+import { parse } from "./lox/parser"
 
 //putting this first causes a cyclical dependency for some reason
-import * from "./lox/lexer"
+import Lexer, * from "./lox/lexer"
 
 let args = expect("Unable to get command line args", argv())
 
 import Expr, { prettyFormat } from "./lox/expr"
 
-let dummy = Expr.Binary(
-  Expr.Unary(
-    { token_type: Minus, text: "-", line: 1 },
-    Expr.Literal({ token_type: Number(123), text: "123", line: 1 })
-  ),
-  { token_type: Star, text: "*", line: 1 },
-  Expr.Grouping(
-    Expr.Literal({ token_type: Number(45.67), text: "45.67", line: 1 })
-  )
-)
+let run = source => {
+  let tokens = Lexer.scanTokens(source)
+  //don't actually run any code if there was an error
+  if (!hadError) {
+    forEach(e => {
+      print(prettyFormat(e))
+    }, parse(fromList(tokens)))
+  }
+}
 
-true
+let runPrompt = () => {
+  print("goldilox REPL 9000")
+  while (true) {
+    Console.prit(">>> ")
+    let input = Console.readLine()
+    if (input == "exit" || input == "quit") {
+      break
+    }
+    run(input)
+  }
+}
 
-print(prettyFormat(dummy))
-
-// let run = source => {
-//   let tokens = Lexer.scanTokens(source)
-//   //don't actually run any code if there was an error
-//   if (!hadError) {
-//     print(tokens)
-//   }
-// }
-
-// let runPrompt = () => {
-//   print("goldilox REPL 9000")
-//   while (true) {
-//     Console.prit(">>> ")
-//     let input = Console.readLine()
-//     if (input == "exit" || input == "quit") {
-//       break
-//     }
-//     run(input)
-//   }
-// }
-
-// if (some(a => endsWith(".lox", a), args)) {
-//   //use the last argument from the command line for simplicity
-//   let f = get(length(args) - 1, args)
-//   match (readFile(f)) {
-//     Ok(s) => {
-//       run(s)
-//     },
-//     Err(e) => {
-//       print(e)
-//     },
-//   }
-// } else {
-//   runPrompt()
-// }
+if (some(a => endsWith(".lox", a), args)) {
+  //use the last argument from the command line for simplicity
+  let f = get(length(args) - 1, args)
+  match (readFile(f)) {
+    Ok(s) => {
+      run(s)
+    },
+    Err(e) => {
+      print(e)
+    },
+  }
+} else {
+  runPrompt()
+}
