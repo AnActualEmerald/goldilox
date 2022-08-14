@@ -1,2 +1,2 @@
 //only binary and unary operations for the chapter 5 parser
-190 * 173 + 232 == 88 + 18392 / 18972 * 2
+2 *190 == 173 / 13

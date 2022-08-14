@@ -53,19 +53,18 @@ let consume = (ex, msg) => {
     //TODO: Report error
     Err(msg)
   }
-    
 }
 
 //this seems inefficient but I don't know how else to make `expression` callable from the top of the grammar
 let rec expression = () => {
   let primary = () => {
-    let mut ret = Expr.NilLiteral
+    let mut ret = Err("prim")
     if (within([Lexer.False])) {
-      ret = Expr.BoolLiteral(false)
+      ret = Ok(Expr.BoolLiteral(false))
     } else if (within([Lexer.True])) {
-      ret = Expr.BoolLiteral(true)
+      ret = Ok(Expr.BoolLiteral(true))
     } else if (within([Lexer.Nil])) {
-      ret = Expr.NilLiteral
+      ret = Ok(Expr.NilLiteral)
     } else {
       let t = advance()
       match (t.token_type) {
@@ -77,10 +76,18 @@ let rec expression = () => {
         },
         _ => {
           if (within([Lexer.LParen])) {
-            let e = expression()
-            match (consume(RParen, "Expect ')' after exression.")){
-              Ok(_) => ret = Ok(Expr.Grouping(e))
-              Err(m) => ret = Err(m)
+            match (expression()) {
+              Ok(e) => {
+                match (consume(Lexer.RParen, "Expect ')' after exression.")) {
+                  Ok(_) => {
+                    ret = Ok(Expr.Grouping(e))
+                  },
+                  Err(m) => {
+                    ret = Err(m)
+                  },
+                }
+              },
+              Err(e) => ret = Err(e),
             }
           }
         },
@@ -92,81 +99,117 @@ let rec expression = () => {
   let rec unary = () => {
     if (within([Lexer.Bang, Lexer.Minus])) {
       let op = previous()
-      let right = unary()
-      Ok(Expr.Unary(op, right))
+      let mut ret = Err("un")
+      match (unary()) {
+        Ok(right) => {
+          ret = Ok(Expr.Unary(op, right))
+        },
+        Err(e) => {
+          ret = Err(e)
+        },
+      }
+      ret
     } else {
       primary()
     }
   }
 
   let factor = () => {
-    let mut e = unary()
+    let mut ret = Err("fact")
+    match (unary()) {
+      Ok(e) => {
+        ret = Ok(e)
 
-    while (within([Lexer.Slash, Lexer.Star])) {
-      let op = previous()
-      match unary() {
-        Ok(t) => {
-        let right = t
-        e = Ok(Expr.Binary(e, op, right))
-        },
-        Err(m) => e = Err(m)
-      }
+        while (within([Lexer.Slash, Lexer.Star])) {
+          let op = previous()
+          match (unary()) {
+            Ok(right) => {
+              ret = Ok(Expr.Binary(e, op, right))
+            },
+            Err(m) => ret = Err(m),
+          }
+        }
+      },
+      Err(e) => {
+        ret = Err(e)
+      },
     }
 
-    e
+    ret
   }
 
   let term = () => {
-    let mut e = factor()
-
-    while (within([Lexer.Minus, Lexer.Plus])) {
-      let op = previous()
-      match factor() {
-        Ok(t) => {
-          let right = factor()
-          e = Ok(Expr.Binary(e, op, right))
-        },
-        Err(m) => e = Err(m)
-      }
+    let mut ret = Err("term")
+    match (factor()) {
+      Ok(e) => {
+        ret = Ok(e)
+        while (within([Lexer.Minus, Lexer.Plus])) {
+          let op = previous()
+          match (factor()) {
+            Ok(right) => {
+              ret = Ok(Expr.Binary(e, op, right))
+            },
+            Err(m) => ret = Err(m),
+          }
+        }
+      },
+      Err(e) => {
+        ret = Err(e)
+      },
     }
 
-    e
+    ret
   }
 
   let comparison = () => {
-    let mut e = term()
+    let mut ret = Err("comp")
 
-    while (
-      within([Lexer.Greater, Lexer.GreaterEqual, Lexer.Less, Lexer.LessEqual])
-    ) {
-      match term(){
-        Ok(t) => {
-          let op = previous()
-          let right = t
-          e = Expr.Binary(e, op, right)
-        },
-        Err(m) => e = Err(m)
-      }
+    match (term()) {
+      Ok(e) => {
+        ret = Ok(e)
+        while (
+          within(
+            [Lexer.Greater, Lexer.GreaterEqual, Lexer.Less, Lexer.LessEqual]
+          )
+        ) {
+              let op = previous()
+          match (term()) {
+            Ok(right) => {
+              ret = Ok(Expr.Binary(e, op, right))
+            },
+            Err(m) => ret = Err(m),
+          }
+        }
+      },
+      Err(e) => {
+        ret = Err(e)
+      },
     }
 
-    e
+    ret
   }
 
   let equality = () => {
-    let mut e = comparison()
-
-    while (within([Lexer.BangEqual, Lexer.EqualEqual])) {
-      match comparison() {
-        Ok(t) => {
-          let op = previous()
-          let right = comparison()
-          e = Expr.Binary(e, op, right)
-        },
-        Err(m) => e = Err(m)
-      }
+    let mut ret = Err("eq")
+    match (comparison()) {
+      Ok(e) => {
+        ret = Ok(e)
+        while (within([Lexer.BangEqual, Lexer.EqualEqual])) {
+              let op = previous()
+          match (comparison()) {
+            Ok(right) => {
+              ret = Ok(Expr.Binary(e, op, right))
+            },
+            Err(m) => ret = Err(m),
+          }
+        }
+      },
+      Err(e) => {
+        ret = Err(e)
+      },
     }
 
-    e
+    ret
   }
 
   equality()
@@ -177,9 +220,12 @@ export let parse = ts => {
   current = 0
   let mut trees = [>]
   while (!isAtEnd()) {
-    match expression() {
+    match (expression()) {
       Ok(e) => trees = Array.append(trees, [> e]),
-      Err(_) => break, //Maybe just keep going when we're able to syncronize
+      Err(e) => {
+        print("Stopped at token " ++ toString(current) ++ " because of " ++ e)
+        break
+      }, //Maybe just keep going when we're able to syncronize
     }
   }
 
