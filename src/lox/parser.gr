@@ -172,7 +172,7 @@ let rec expression = () => {
             [Lexer.Greater, Lexer.GreaterEqual, Lexer.Less, Lexer.LessEqual]
           )
         ) {
-              let op = previous()
+          let op = previous()
           match (term()) {
             Ok(right) => {
               ret = Ok(Expr.Binary(e, op, right))
@@ -195,7 +195,7 @@ let rec expression = () => {
       Ok(e) => {
         ret = Ok(e)
         while (within([Lexer.BangEqual, Lexer.EqualEqual])) {
-              let op = previous()
+          let op = previous()
           match (comparison()) {
             Ok(right) => {
               ret = Ok(Expr.Binary(e, op, right))
