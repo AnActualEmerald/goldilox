@@ -24,8 +24,9 @@ let run = source => {
   if (!hadError) {
     let toks = fromList(tokens)
     let parseStart = unwrap(time())
-    let trees = parse(toks)
+    let (trees, errors) = parse(toks)
     let parseEnd = unwrap(time())
+    forEach(e => print(e), errors)
     forEach(e => {
       print(prettyFormat(e))
     }, trees)

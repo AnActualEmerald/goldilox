@@ -215,19 +215,48 @@ let rec expression = () => {
   equality()
 }
 
+let syncronize = () => {
+  advance()
+  let mut ret = false
+  while(!isAtEnd()) {
+    if(previous().token_type == Lexer.Semicolon) {
+      ret = true
+      break
+    }
+
+    match(peek().token_type) {
+      Lexer.Class | Lexer.Fun | Lexer.Var |Lexer.For | Lexer.If | Lexer.While | Lexer.Print | Lexer.Return => {
+      ret = true
+      break
+      },
+      _ => {
+        ignore(advance())
+      }
+    }
+  }     
+
+  ret
+}
+
+
 export let parse = ts => {
   tokens = ts
   current = 0
   let mut trees = [>]
+  let mut errors = [>]
   while (!isAtEnd()) {
     match (expression()) {
       Ok(e) => trees = Array.append(trees, [> e]),
       Err(e) => {
-        print("Stopped at token " ++ toString(current) ++ " because of " ++ e)
-        break
-      }, //Maybe just keep going when we're able to syncronize
+        errors = Array.append(errors, [> e])
+        if (syncronize()) {
+          continue
+        } else {
+          break
+        }
+      }, 
     }
   }
 
-  trees
+  (trees, errors)
 }

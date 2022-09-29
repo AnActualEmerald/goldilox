@@ -1,2 +1,7 @@
+
+//should produce an error
+2 * 2 >= (12323 * 3;
+
 //only binary and unary operations for the chapter 5 parser
 2 *190 == 173 / 13
+
