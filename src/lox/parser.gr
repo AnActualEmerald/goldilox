@@ -8,6 +8,7 @@ import Error from "../util/error"
 let mut tokens: Array<Lexer.Token> = [>]
 let mut current = 0
 
+//--UTILITIES--//
 let error = (token: Lexer.Token, msg) => {
   Error.report_raw(
     "[line " ++ toString(token.line) ++ " at '" ++ token.text ++ "']: " ++ msg
@@ -63,6 +64,7 @@ let consume = (ex, msg) => {
   }
 }
 
+//--EXPRESSION PARSER--//
 //this seems inefficient but I don't know how else to make `expression` callable from the top of the grammar
 let rec expression = () => {
   let primary = () => {
@@ -249,6 +251,8 @@ let syncronize = () => {
 
   ret
 }
+
+//--EXPORTED FUNCTIONS--//
 
 export let parse = ts => {
   tokens = ts
