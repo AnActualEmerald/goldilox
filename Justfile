@@ -3,6 +3,9 @@ run *args='':
 
 build:
     grain compile src/main.gr -o goldilox.wasm
+    
+wat:
+    grain compile --wat src/main.gr -o goldilox.wasm
 
 test:
     grain src/main.gr test.lox
