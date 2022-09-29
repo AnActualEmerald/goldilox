@@ -1,10 +1,18 @@
 import { forEach } from "list"
+import { unwrap } from "result"
 import Array from "array"
 import Lexer from "./lexer"
 import Expr from "./expr"
+import Error from "../util/error"
 
 let mut tokens: Array<Lexer.Token> = [>]
 let mut current = 0
+
+let error = (token: Lexer.Token, msg) => {
+  Error.report_raw(
+    "[line " ++ toString(token.line) ++ " at '" ++ token.text ++ "']: " ++ msg
+  )
+}
 
 let previous = () => {
   tokens[current - 1]
@@ -50,7 +58,7 @@ let consume = (ex, msg) => {
   if (check(ex)) {
     Ok(advance())
   } else {
-    //TODO: Report error
+    error(peek(), msg)
     Err(msg)
   }
 }
@@ -66,12 +74,14 @@ let rec expression = () => {
     } else if (within([Lexer.Nil])) {
       ret = Ok(Expr.NilLiteral)
     } else {
-      let t = advance()
+      let t = peek()
       match (t.token_type) {
         Lexer.String(s) => {
+          advance()
           ret = Ok(Expr.StringLiteral(s))
         },
         Lexer.Number(n) => {
+          advance()
           ret = Ok(Expr.NumLiteral(n))
         },
         _ => {
@@ -218,45 +228,44 @@ let rec expression = () => {
 let syncronize = () => {
   advance()
   let mut ret = false
-  while(!isAtEnd()) {
-    if(previous().token_type == Lexer.Semicolon) {
+  while (!isAtEnd()) {
+    if (previous().token_type == Lexer.Semicolon) {
       ret = true
       break
     }
 
-    match(peek().token_type) {
-      Lexer.Class | Lexer.Fun | Lexer.Var |Lexer.For | Lexer.If | Lexer.While | Lexer.Print | Lexer.Return => {
-      ret = true
-      break
+    match (peek().token_type) {
+      Lexer.Class | Lexer.Fun | Lexer.Var | Lexer.For | Lexer.If | Lexer.While |
+      Lexer.Print |
+      Lexer.Return => {
+        ret = true
+        break
       },
       _ => {
         ignore(advance())
-      }
+      },
     }
-  }     
+  }
 
   ret
 }
-
 
 export let parse = ts => {
   tokens = ts
   current = 0
   let mut trees = [>]
-  let mut errors = [>]
   while (!isAtEnd()) {
     match (expression()) {
       Ok(e) => trees = Array.append(trees, [> e]),
       Err(e) => {
-        errors = Array.append(errors, [> e])
         if (syncronize()) {
           continue
         } else {
           break
         }
-      }, 
+      },
     }
   }
 
-  (trees, errors)
+  trees
 }

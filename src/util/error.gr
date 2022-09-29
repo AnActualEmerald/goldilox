@@ -4,3 +4,8 @@ export let report = (line: Number, message) => {
   hadError = true
   print("[line " ++ toString(line) ++ "] Error: " ++ message)
 }
+
+export let report_raw = message => {
+  hadError = true
+  print(message)
+}
