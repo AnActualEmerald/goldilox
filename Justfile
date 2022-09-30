@@ -2,10 +2,13 @@ run *args='':
     grain src/main.gr {{args}}
 
 build:
-    grain compile src/main.gr -o goldilox.wasm
+    grain compile --release src/main.gr -o goldilox.wasm
     
 wat:
-    grain compile --wat src/main.gr -o goldilox.wasm
+    grain compile --release --wat src/main.gr -o goldilox.wasm
+
+web:
+    grain compile --release --wat  src/index.gr -o goldilox.net.wasm
 
 test:
     grain src/main.gr test.lox
