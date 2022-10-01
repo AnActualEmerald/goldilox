@@ -1,0 +1,81 @@
+import Lexer, *, {Token} from "./lexer"
+import Expr from "./expr"
+
+
+enum Value {
+  Num(Number),
+  Bl(Bool),
+  St(String)
+}
+
+record Error {
+  line: Number,
+  msg: String,
+}
+
+let isTruthy = (expr) => {
+  match(expr) {
+    Expr.NilLiteral => false,
+    Expr.BoolLiteral(b) => b,
+    _ => true
+  }
+}
+
+let binary = (left, op, right) => {
+  match (op.token_type) {
+    Minus => {
+
+      Ok()
+    }
+  }
+}
+
+let unary = (expr) => {
+  match (expr) {
+    Expr.Unary({ token_type: Minus, text: _, line }, right) => {
+      match (right) {
+        Expr.NumLiteral(n) => {
+          Ok(Num(0-n))
+        },
+        _ =>
+          Err(
+            {
+              line,
+              msg: "Expression '" ++
+              toString(right) ++
+              "' not supported in this position",
+            }
+          ),
+      }
+    },
+    Expr.Unary({token_type: Bang, text: _, line}, right) => {
+      Ok(Bl(!isTruthy(right)))
+    },
+    //Should be unreachable
+    _ => Err({line: 0, msg: "Expected unary expression"}),
+  }
+}
+
+export let rec evaluate = expr => {
+  match (expr) {
+    Expr.Binary(l, op, r) => {
+      let left = evaluate(l)
+      let rigt = evaluate(r)
+      binary(left, op, right)
+    },
+    Expr.Unary(_, _) => {
+      unary(expr)
+    },
+    _ => {
+      print(expr)
+      Err({line: 0, msg: "Unsupported"})
+    }
+  }
+}
+// let literal = (expr) => {
+
+// }
+
+// let grouping = (expr) => {
+
+// }

@@ -11,6 +11,7 @@ import { sub, div, toNumber } from "int64"
 import { fromNumber } from "float64"
 //putting this first causes a cyclical dependency for some reason
 import Lexer, * from "./lox/lexer"
+import Interpreter from "./lox/interpreter"
 
 let args = expect("Unable to get command line args", argv())
 
@@ -26,14 +27,19 @@ let run = source => {
     let parseStart = unwrap(time())
     let trees = parse(toks)
     let parseEnd = unwrap(time())
-    forEach(e => {
-      print(prettyFormat(e))
-    }, trees)
+    // forEach(e => {
+    //   print(prettyFormat(e))
+    // }, trees)
     //I really dislike the way Numbers are printed sorry
     let lt = fromNumber(toNumber(sub(lexEnd, lexStart)) / 1000000)
     let pt = fromNumber(toNumber(sub(parseEnd, parseStart)) / 1000000)
     print("Lexing took: " ++ toString(lt) ++ "ms")
     print("Parsing took: " ++ toString(pt) ++ "ms")
+    if(!hadError) {
+      forEach(e => {
+        print(Interpreter.evaluate(e))
+      }, trees)
+    }
   }
 }
 

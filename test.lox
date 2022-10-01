@@ -1,6 +1,8 @@
+-5
+!false
 
 //should produce an error
-(12323 * 3;
+(12323 * 3)
 
 //only binary and unary operations for the chapter 5 parser
 2 *190 == 173 / 13
